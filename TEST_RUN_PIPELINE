@@ -1,0 +1,1 @@
+cellprofiler -c -r -i /home/user/Documents/Marker_Distribution/ -o /home/user/Documents/Marker_Distribution/cp_output -p /home/user/Documents/Marker_Distribution/Mask_outline_measure_object_distribution_pipeline.cppipe --file-list=/home/user/Documents/Marker_Distribution/file_list.txt --plugins-directory /home/user/CellProfiler/plugins

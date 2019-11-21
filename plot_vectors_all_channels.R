@@ -1,7 +1,8 @@
 # Script to plot arrows of channel vectors for many channels
 library(ggplot2)
 
-library(jpeg)
+library(tiff)
+#library(jpeg)
 library(ggplot2)
 library(raster)
 library(grid)
@@ -51,7 +52,7 @@ transform_zernike_to_vector_end <- function (data, scale_factor = 0, max_length 
   # scale and place vector in the image coord system
   data$Zernike_X <- scale_factor * data$Zernike_X + data$X
   data$Zernike_Y <- scale_factor * data$Zernike_Y + data$Y
-
+  
   return(data)  
 }
 
@@ -81,36 +82,30 @@ for (channel in channel_list){
 }
 
 
-#image <- jpeg::readJPEG("/home/user/Documents/channels_split_cellprofiler_headless/Output_Channels_Split_Transferred/s0287_Sedigeh-HandN_s0_p5_r1_a1_ac_ilastik_s2_Probabilities_no_gaps__mask.tiff")
-#grob <- rasterGrob(image, interpolate=TRUE)
 
-str_name<-'cp_output/Overlay.tiff'    # TO DO Get the right channel overlay for each channel. This file is for testing.
-
-library(tiff)
-image <- readTIFF(str_name) 
-
-grob <- rasterGrob(image, interpolate=TRUE)
-
-
-library(tiff)
-image <- readTIFF(str_name)
 
 pdf("plots.pdf", width = 6.9, height = 7)
 
 # all channels  in the list)
 
-# for (channel in channel_list) {
-  
-  # OR only the correct channel)
-  
-for (channel in c("Channel_6")){
+for (channel in channel_list) {
+
+# OR only the correct channel)
+
+#for (channel in c("HandN-0006")){
   
   data <- get(channel)
   
   roi <- subset_roi(data, 100, 400, 200, 200)
-
+  
+  
+  str_name<-paste0(channel_sub_folder, channel, "/Overlay.tiff") 
+  image <- readTIFF(str_name) 
+  grob <- rasterGrob(image, interpolate=TRUE)
+  
+  
   # plot subset with arrows towards the centre of mass
-
+  
   p <- ggplot(roi, aes(X, Y)) +
     scale_y_reverse() +
     theme_classic() +
@@ -120,9 +115,9 @@ for (channel in c("Channel_6")){
                  arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
                  color = "red")
   print(p)
-
+  
   # plot subset with arrows towards the Zernike coord
-
+  
   p <- ggplot(roi, aes(X, Y)) +
     scale_y_reverse() +
     theme_classic() +
@@ -132,7 +127,7 @@ for (channel in c("Channel_6")){
                  arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
                  color = "red")
   print(p)
-
+  
   
   
   #plot Centre OF Mass with mask
@@ -144,9 +139,9 @@ for (channel in c("Channel_6")){
     geom_point(color = "yellow", size = 0.25, stroke = 0) +
     ggtitle(paste("Centre Of Mass with Mask:", channel)) +
     geom_segment(aes(x = X, y = Y, xend = COM_X, yend = COM_Y),
-                arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
-                color  = "red")
-    
+                 arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
+                 color  = "red")
+  
   print(p)
   # ggsave("ggsave.pdf", width = 6.9, height = 7)  # save individual plot
   
@@ -162,7 +157,7 @@ for (channel in c("Channel_6")){
                  arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
                  color = "red")
   print(p)
-
+  
 }
 
 dev.off()
