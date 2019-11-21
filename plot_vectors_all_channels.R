@@ -90,7 +90,7 @@ pdf("plots.pdf", width = 6.9, height = 7)
 
 for (channel in channel_list) {
 
-# OR only the correct channel)
+# OR only the specified channel)
 
 #for (channel in c("HandN-0006")){
   
