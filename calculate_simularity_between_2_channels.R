@@ -1,0 +1,143 @@
+# Calculate simularity or 'partner' score between neighbours between 2 channels
+library(tiff)
+#library(jpeg)
+library(ggplot2)
+library(raster)
+library(grid)
+source("utilities.R")
+
+
+# load the data from all cell.csv files in all subfolders, and calculate Zernike vectors
+# NB All channels will use the same scale factor for the Zernike vectors, so far
+channel_sub_folder = "cp_output/"
+channel_list <- list.dirs(path = channel_sub_folder, full.names = FALSE, recursive = FALSE)
+for (channel in channel_list){
+  data <- load_cellcsv(paste0(channel_sub_folder, channel, "/cell.csv"))
+  data <- transform_zernike_to_vector_end(data)
+  assign(channel, data)
+  rm(data)
+}
+
+############################################
+
+# calculate simlularity or interaction score
+
+calculate_score1 <- function(o1, o2){
+  # dot product of Zernike moments
+  score <- o1$ZernikeMagnitude_1_1 * o2$ZernikeMagnitude_1_1 * cos(o1$ZernikePhase_1_1 - o2$ZernikePhase_1_1)
+  score <- ifelse(score==0, 0, log10(abs(score * 100E10)) * sign(score))
+  return(score)
+}
+
+calculate_score2 <- function(o1, o2){
+  # dot product of com vector
+  score <- (o1$COM_X-o1$X) * (o2$COM_X-o2$X) + (o1$COM_Y-o1$Y) * (o2$COM_Y-o2$Y)
+  score <- ifelse(score==0, 0, log10(abs(score)) * sign(score))
+  return(score)
+}
+
+calculate_score3 <- function(o1, o2){
+  # product of Zernike moments projected onto the connecting line
+
+  # Threshold the Zernike 0 0 value?????
+
+  # theta is the angle of the line connecting the 2 objects
+  theta <- atan((o1$Y - o2$Y)/(o1$X - o2$X))
+  
+  # project each vector onto this line
+  s1 <- o1$ZernikeMagnitude_1_1 * cos(o1$ZernikePhase_1_1 - theta)
+  s2 <- o2$ZernikeMagnitude_1_1 * cos(o2$ZernikePhase_1_1 - theta)
+  
+  score <- s1 * s2
+  score <- ifelse(score==0, 0, log10(abs(score)) * sign(score))
+  
+  return(score)
+}
+
+#############################################
+
+
+# load the cell neighbour relationships
+# This will be the same for all channels so just load the one in the parent folder
+NR <- read.csv("cp_output/Object relationships.csv")
+
+# initialise a col for the scores etc.
+NR$score <- NA
+NR$obj1_x <- NA
+NR$obj1_y <- NA
+NR$obj2_x <- NA
+NR$obj2_y <- NA
+
+# Calculate scores between cells for 2 given channels
+channelA = 12
+channelB = 12
+chA_name <- ls(pattern = "HandN*")[channelA]     # relies on corrent file names!
+chB_name <- ls(pattern = "HandN*")[channelB]     # relies on corrent file names!
+chA_data <- get(chA_name)
+chB_data <- get(chB_name)
+
+for (i in 1:length(NR$First.Object.Number)){
+  
+  obj1 <- NR$First.Object.Number[i]
+  obj2 <- NR$Second.Object.Number[i]
+  
+  channelA_obj1 <- chA_data[obj1,]   # relies on one object per row in order in the channel data
+  channelB_obj2 <- chB_data[obj2,]
+  
+  s <- calculate_score3(channelA_obj1, channelB_obj2)
+  
+  NR$score[i] <- s
+  
+  NR$obj1_x[i] <- channelA_obj1$X
+  NR$obj1_y[i] <- channelA_obj1$Y
+  NR$obj2_x[i] <- channelB_obj2$X
+  NR$obj2_y[i] <- channelB_obj2$Y
+}
+
+# visualise
+pdf("plot_scores.pdf", width = 7.9, height = 7)
+
+str_name<-paste0(channel_sub_folder, chA_name, "/Overlay.tiff") 
+image <- readTIFF(str_name) 
+grob <- rasterGrob(image, interpolate=TRUE)
+
+#plot Zernike with mask
+p <- ggplot(chA_data, aes(X, Y)) +
+  annotation_custom(grob = grob, xmin=0, xmax=1000, ymin=0, ymax=-1000) +
+  scale_y_reverse() +
+  theme_classic() +
+  geom_point(color = "yellow", size = 0.25, stroke = 0) +
+  ggtitle(paste("Zernike with Mask:", chA_name)) +
+  geom_segment(aes(x = X, y = Y, xend = Zernike_X, yend = Zernike_Y),
+               arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
+               color = "black") +
+  geom_segment(data = NR, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y, color = score),
+              size = 0.12) +
+              scale_color_gradient2(low = ("white"), mid = "cyan",
+                                    high = ("red"))
+print(p)
+
+dev.off()
+
+
+
+# geom_segment(data = NR, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y, color = score),
+#              size = 0.12) +
+#   scale_color_gradient2(low = ("red"), mid = "white",
+#                         high = ("blue"))
+# 
+
+# geom_segment(data = NR, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y, color = score),
+#              size = 0.12) +
+#   scale_color_gradient(high="red",low="blue")
+
+
+
+
+#  (data = NR, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y, col = score),
+#   size = 0.12) +
+# col = score
+
+
+
+
