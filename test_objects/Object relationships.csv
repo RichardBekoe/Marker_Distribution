@@ -1,0 +1,6 @@
+Module,Module Number,Relationship,First Object Name,First Image Number,First Object Number,Second Object Name,Second Image Number,Second Object Number
+MeasureObjectNeighbors,14,Neighbors,cell,1,1,cell,1,2
+MeasureObjectNeighbors,14,Neighbors,cell,1,1,cell,1,3
+MeasureObjectNeighbors,14,Neighbors,cell,1,1,cell,1,4
+MeasureObjectNeighbors,14,Neighbors,cell,1,2,cell,1,3
+MeasureObjectNeighbors,14,Neighbors,cell,1,2,cell,1,4
