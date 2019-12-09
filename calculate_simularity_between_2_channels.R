@@ -42,13 +42,27 @@ calculate_score3 <- function(o1, o2){
   # Threshold the Zernike 0 0 value?????
 
   # theta is the angle of the line connecting the 2 objects
-  theta <- atan((o2$Y - o1$Y)/(o2$X - o1$X))
+  theta <- atan2((o2$Y - o1$Y), (o2$X - o1$X))
+  
 
   # project each vector onto this line
   s1 <- o1$ZernikeMagnitude_1_1 * cos(o1$ZernikePhase_1_1 - theta)
   s2 <- o2$ZernikeMagnitude_1_1 * cos(o2$ZernikePhase_1_1 - theta)
   
+  # We know if s1 +ve and s2 -ve the vectors point towards each other, vive versa is away from each other
+  # Not interested in both +ve or both -ve
   score <- s1 * s2
+  if(score >= 0){ # both +ve or both -ve
+    score <- 0
+  }
+  else{
+    if(s1 > 0){  # implies s2 < 0
+      score <- abs(score) #   ->    <-
+    }
+    else{
+      score <- -1 * abs(score) #   <- ->
+    }
+  }
 
   return(c(score, s1, s2, theta*360/(2*3.142), o1$ZernikePhase_1_1*360/(2*3.142), o2$ZernikePhase_1_1*360/(2*3.142)))
 }
@@ -104,6 +118,10 @@ for (i in 1:length(NR$First.Object.Number)){
   NR$obj2_y[i] <- channelB_obj2$Y
 }
 
+# Categorise score
+NR$interaction <- ifelse(NR$score > 0, "Y", 
+                         ifelse(NR$score == 0, NA, "N"))
+
 # visualise
 pdf("plot_scores.pdf", width = 7.9, height = 7)
 
@@ -120,11 +138,11 @@ p <- ggplot(chA_data, aes(X, Y)) +
   ggtitle(paste("Zernike with Mask:", chA_name)) +
   geom_segment(aes(x = X, y = Y, xend = Zernike_X, yend = Zernike_Y),
                arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
-               color = "black") +
-  geom_segment(data = NR, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y, color = score),
-              size = 0.15) +
-              scale_color_gradient2(low = ("red"), mid = "white",
-                                    high = ("purple"))
+               color = "white") +
+  geom_segment(data = NR, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y, color = interaction),
+              size = 0.15) #+
+          #    scale_color_gradient2(low = ("red"), mid = "white",
+          #                          high = ("purple"))
 print(p)
 
 dev.off()
