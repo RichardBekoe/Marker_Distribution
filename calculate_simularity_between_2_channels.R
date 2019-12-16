@@ -202,3 +202,4 @@ number_of_interactions <- data.frame(Channel_A, Channel_B, Num_Interactions)
 write.csv(number_of_interactions, file = "number_of_interactions.csv")
 
 
+#
