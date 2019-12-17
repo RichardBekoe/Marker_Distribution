@@ -43,6 +43,8 @@ calculate_score3 <- function(o1, o2){
   theta <- atan2((o2$Y - o1$Y), (o2$X - o1$X))
   
   # Threshold the Zernike 0 0 value?????
+  # Use of Otsu thresholding function?
+  # Plot histogram of each of the channels for zernike 0, to inspect the distribution (in R/ Excel?)
   threshold = 1E-5
   if(o1$ZernikeMagnitude_0_0 < threshold || o2$ZernikeMagnitude_0_0 < threshold){
     score = NA
@@ -166,9 +168,8 @@ for(channelA in 1:12){
                      arrow = arrow(length = unit(0.002, "npc")), size = 0.12,
                      color = "white") +
         geom_segment(data = NR_interactions, aes(x = obj1_x, y = obj1_y, xend = obj2_x, yend = obj2_y), color = "red",
-                    size = 0.15) #+
-                #    scale_color_gradient2(low = ("red"), mid = "white",
-                #                          high = ("purple"))
+                    size = 0.15) 
+      
       print(p)
       
       dev.off()
@@ -201,5 +202,12 @@ for(channelA in 1:12){
 number_of_interactions <- data.frame(Channel_A, Channel_B, Num_Interactions)
 write.csv(number_of_interactions, file = "number_of_interactions.csv")
 
+# plot heatmap
+pdf("Heatmap_interactions.pdf")
+p <- ggplot(number_of_interactions, aes(x=as.factor(Channel_A), y=as.factor(Channel_B), fill=Num_Interactions)) + 
+  geom_tile() + xlab("Channel Number") + ylab("Channel Number") + scale_fill_gradient(low = "white", high= "blue")
 
-#
+print(p)
+dev.off()
+
+
