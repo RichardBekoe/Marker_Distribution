@@ -74,7 +74,7 @@ calculate_score3 <- function(o1, o2){
     
   }
   
-  return(c(score, s1, s2, theta*360/(2*3.142), o1$ZernikePhase_1_1*360/(2*3.142), o2$ZernikePhase_1_1*360/(2*3.142)))
+  return(c(score, s1, s2, theta*360/(2*3.142), o1$ZernikePhase_1_1*360/(2*3.142), o2$ZernikePhase_1_1*360/(2*3.142))) # n radians=180 degrees; conversion to degrees
 }
 
 #############################################
@@ -118,7 +118,7 @@ for(channelA in 1:12){
       obj1 <- NR$First.Object.Number[i]
       obj2 <- NR$Second.Object.Number[i]
       
-      if(obj1 > obj2) next    # there are repeats in the data, i.e. 1->12 and 12->1, remove repeats
+      if(obj1 > obj2) next    # there are repeats in the data, i.e. obj_1 -> obj_12 and obj_12 -> 1, remove repeats
       
       channelA_obj1 <- chA_data[obj1,]   # relies on one object per row in order in the channel data
       channelB_obj2 <- chB_data[obj2,]
